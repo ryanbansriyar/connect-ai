@@ -36,6 +36,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   responsive_navigation_bar: ^5.0.2
+  google_sign_in: ^6.0.0
+  google_sign_in_web: ^0.12.4+3
+  http: ^1.2.2
 
 dev_dependencies:
   flutter_test:
