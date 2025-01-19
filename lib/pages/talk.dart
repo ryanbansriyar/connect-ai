@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:project1/pages/home.dart';
+import 'package:project1/pages/profile.dart';
 import 'package:responsive_navigation_bar/responsive_navigation_bar.dart';
 
 class Talk extends StatefulWidget {
@@ -20,6 +21,21 @@ class _TalkState extends State<Talk> {
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => Home(),
+            transitionsBuilder: (context, animation, secondaryAnimation,
+                child) {
+              return child;
+            },
+            transitionDuration: Duration.zero,
+          ),
+        );
+      });
+    }
+    if (_selectedIndex == 2) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => MainProfilePage(),
             transitionsBuilder: (context, animation, secondaryAnimation,
                 child) {
               return child;

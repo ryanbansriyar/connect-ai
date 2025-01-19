@@ -3,12 +3,14 @@ import 'package:project1/pages/objectivepage.dart';
 import 'package:project1/pages/talk.dart';
 import 'package:project1/pages/home.dart';
 import 'package:project1/pages/login.dart';
+import 'package:project1/pages/profile.dart';
 void main() => runApp(MaterialApp(
     initialRoute: '/login',
     routes: {
       '/home': (context) => Home(),
       '/talk': (context) => Talk(),
       '/login': (context) => LoginScreen(),
+      '/profile': (context) => MainProfilePage(),
     }
 
 ));
