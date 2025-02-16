@@ -36,7 +36,7 @@ class NumbersWidget extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.center,
     children: <Widget>[
-      buildButton(context, '4.8', 'Tasks'),
+      buildButton(context, '5', 'Tasks'),
     ],
   );
   Widget buildDivider() => Container(

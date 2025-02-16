@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:project1/pages/home.dart';
 import 'package:project1/pages/profile.dart';
 import 'package:responsive_navigation_bar/responsive_navigation_bar.dart';
+import 'package:project1/pages/chat_screen.dart';
 
 class Talk extends StatefulWidget {
   @override
@@ -84,6 +85,7 @@ class _TalkState extends State<Talk> {
           ],
         ),
         // extendBody: true,
+        body: _selectedIndex == 1 ? ChatScreen() : Container(),
         bottomNavigationBar: ResponsiveNavigationBar(
           selectedIndex: _selectedIndex,
           onTabChange: changeTab,
@@ -115,4 +117,3 @@ class _TalkState extends State<Talk> {
     );
   }
 }
-

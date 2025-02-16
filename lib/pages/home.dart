@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:project1/pages/profile.dart';
@@ -7,48 +6,136 @@ import 'package:project1/pages/talk.dart';
 import 'package:responsive_navigation_bar/responsive_navigation_bar.dart';
 import 'optioncard.dart';
 import 'optioncard_cards.dart';
+import 'objectivepage.dart';
 
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
 }
 
-List<OptionCard> options = [
-  OptionCard(title: 'Option 1', text: 'Description 1', extended: 'An extremely long description 1'),
-  OptionCard(title: 'Option 2', text: 'Description 2', extended: 'An extremely long description 2'),
-  OptionCard(title: 'Option 3', text: 'Description 3', extended: 'An extremely long description 3')
-];
-
-Future<Response> getData() async {
-  Response response = await get(Uri.parse('http://127.0.0.1:5000/taskapi/1'));
-  return response;
-}
-
 class _HomeState extends State<Home> {
+  List<OptionCard> options = [];
+  List<int> completedTasks = []; // Keep track of completed task IDs
+  bool isLoading = true;
+  String? errorMessage;
+  int nextTaskId = 1; // Track the next task ID to fetch
+  final int maxVisibleTasks = 3;
+
   @override
   void initState() {
     super.initState();
-    _fetchData();
+    _fetchInitialData();
   }
+  Future<void> _fetchInitialData() async {
+    if (!mounted) return; // Check if the widget is still in the tree
 
-  Future<void> _fetchData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
     try {
-      Response response = await getData();
-      String data = response.body;
-      print(data);
+      List<OptionCard> fetchedOptions = [];
+      // Fetch only one task at a time
+      for (int i = 0; i < maxVisibleTasks; i++) {
+        if (!completedTasks.contains(nextTaskId + i)) {
+          Response response = await getData((nextTaskId + i).toString());
+          final jsonData = jsonDecode(response.body);
+          String name = jsonData['name'] as String;
+          String extended = jsonData['extended'] as String;
+          String short = jsonData['short'] as String;
+          fetchedOptions.add(OptionCard(title: name, text: short, extended: extended));
+        }
+      }
+
+      if (!mounted) return; // Check again before updating state
       setState(() {
-        options = [
-          OptionCard(title: data, text: 'Description 1', extended: 'An extremely long description 1'),
-          OptionCard(title: 'Option 2', text: 'Description 2', extended: 'An extremely long description 2'),
-          OptionCard(title: 'Option 3', text: 'Description 3', extended: 'An extremely long description 3')
-        ];
+        options = fetchedOptions;
+        isLoading = false;
       });
     } catch (e) {
       print('Error fetching data: $e');
-      // Handle error, e.g., show a snackbar
+      if (!mounted) return; // Check again before updating state
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error fetching data: $e';
+      });
+    }
+  }
+  Future<Response> getData(number) async {
+    Response response = await get(Uri.parse('http://frogleader.pythonanywhere.com/taskapi/' + number));
+    print(response);
+    return response;
+  }
+
+  Future<void> _fetchData(int index) async {
+    if (!mounted) return; // Check if the widget is still in the tree
+
+    try {
+      Response response = await getData(nextTaskId.toString());
+      final jsonData = jsonDecode(response.body);
+      String name = jsonData['name'] as String;
+      String extended = jsonData['extended'] as String;
+      String short = jsonData['short'] as String;
+      OptionCard newOption = OptionCard(title: name, text: short, extended: extended);
+
+      if (!mounted) return; // Check again before updating state
+      setState(() {
+        options[index] = newOption;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+      if (!mounted) return; // Check again before updating state
+      setState(() {
+        errorMessage = 'Error fetching data: $e';
+      });
     }
   }
 
+  Future<void> _completeTask(int taskId) async {
+    print("Completing task with ID: $taskId"); // Added print statement
+    // Show dialog to confirm completion
+    bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Complete Task?'),
+          content: Text('Are you sure you want to complete this task?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: Text('Complete'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      if (!mounted) return; // Check if the widget is still in the tree
+      setState(() {
+        completedTasks.add(taskId);
+      });
+    }
+  }
+  void _navigateToObjectivePage(OptionCard option, int taskId, int index, Function(int, int) onTaskCompleted) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ObjectiveDetailPage(
+          title: option.title,
+          text: option.extended,
+          onTaskCompleted: onTaskCompleted, // Pass the callback here
+          taskId: taskId,
+          index: index,
+        ),
+      ),
+    );
+  }
   int _selectedIndex = 0;
 
   void changeTab(int index) {
@@ -61,8 +148,7 @@ class _HomeState extends State<Home> {
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => Talk(),
-            transitionsBuilder: (context, animation, secondaryAnimation,
-                child) {
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return child;
             },
             transitionDuration: Duration.zero,
@@ -76,8 +162,7 @@ class _HomeState extends State<Home> {
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => MainProfilePage(),
-            transitionsBuilder: (context, animation, secondaryAnimation,
-                child) {
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return child;
             },
             transitionDuration: Duration.zero,
@@ -86,9 +171,18 @@ class _HomeState extends State<Home> {
       });
     }
   }
-
-  Widget optionTemplate(quote) {
-    return new OptionCardCreator(optionChoose: quote);
+  void _onTaskCompleted(int taskId, int index) {
+    setState(() {
+      completedTasks.add(taskId);
+      nextTaskId++;
+    });
+    _fetchData(index);
+  }
+  Widget optionTemplate(OptionCard quote, int taskId, int index) {
+    return GestureDetector(
+      onTap: () => _navigateToObjectivePage(quote, taskId, index, _onTaskCompleted),
+      child: OptionCardCreator(optionChoose: quote),
+    );
   }
 
   @override
@@ -96,7 +190,7 @@ class _HomeState extends State<Home> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Application'),
+          title: const Text('Home'),
           backgroundColor: Colors.green,
           actions: <Widget>[
             IconButton(
@@ -128,8 +222,15 @@ class _HomeState extends State<Home> {
           ],
         ),
         body: Center(
-          child: Column(
-            children: options.map((quote) => optionTemplate(quote)).toList(),
+          child: isLoading
+              ? CircularProgressIndicator()
+              : errorMessage != null
+              ? Text(errorMessage!)
+              : Column(
+            children: [
+              for (int i = 0; i < options.length; i++)
+                optionTemplate(options[i], nextTaskId + i, i), // Use nextTaskId here
+            ],
           ),
         ),
         bottomNavigationBar: ResponsiveNavigationBar(

@@ -3,8 +3,17 @@ import 'package:flutter/material.dart';
 class ObjectiveDetailPage extends StatelessWidget {
   final String title;
   final String text;
+  final Function(int, int) onTaskCompleted; // Callback function
+  final int taskId;
+  final int index;
 
-  ObjectiveDetailPage({required this.title, required this.text});
+  ObjectiveDetailPage({
+    required this.title,
+    required this.text,
+    required this.onTaskCompleted, // Receive the callback
+    required this.taskId,
+    required this.index,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,52 +35,53 @@ class ObjectiveDetailPage extends StatelessWidget {
           ),
           Center(
             child: OutlinedButton(
-                onPressed: () {
-                  _showOptionsDialog(context);
-                }, child: Text("Start")
-
+              onPressed: () {
+                _showOptionsDialog(context);
+              },
+              child: Text("Start"),
             ),
           )
         ],
       ),
     );
   }
-}
-void _showOptionsDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Choose an Option'),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Option 1'),
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-              _handleOption1(context); // Handle option 1
-            },
-          ),
-          TextButton(
-            child: Text('Option 2'),
-            onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
-              _handleOption2(context); // Handle option 2
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
 
-void _handleOption1(BuildContext context) {
-  // Handle the action for Option 1
-  print('Option 1 selected');
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Option 1 Selected')));
-}
+  void _showOptionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text('Did completing the task make you feel better?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _handleOption1(context);
+              },
+            ),
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _handleOption2(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-void _handleOption2(BuildContext context) {
-  // Handle the action for Option 2
-  print('Option 2 selected');
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Option 2 Selected')));
+  void _handleOption1(BuildContext context) {
+    print('Option 1 selected');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Option 1 Selected')));
+    onTaskCompleted(taskId, index); // Execute the callback
+  }
+
+  void _handleOption2(BuildContext context) {
+    print('Option 2 selected');
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Option 2 Selected')));
+    onTaskCompleted(taskId, index); // Execute the callback
+  }
 }
