@@ -1,4 +1,3 @@
-# epic-wellness
+# Connect AI
 
 
-the project
